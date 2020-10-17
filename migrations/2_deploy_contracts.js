@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 // Changing the blockchain's state
 const Token = artifacts.require("Token");
 
