@@ -6,19 +6,36 @@ require('chai')
   .use(require('chai-as-promised'))
   .should()
 
-contracts_build_directory('Token', (accounts) => {
+contract('Token', (accounts) => {
+  const name = "LenCoin"
+  const symbol = 'LEN'
+  const decimals = '18'
+  const totalSupply = '1000000000000000000000000'
+  let token
+  
+  beforeEach(async () => {
+    token = await Token.new()
+  })
 
   describe('deployment', () => {
     it('tracks the name', async () => {
-
-      // Read token name here...
-      const token = await Token.new()
-
-      // Token name is "LenCoin"
       const result = await token.name()
+      result.should.equal(name)
+    })
 
-      // Check the token name is 'LenCoin'
-      result.should.equal('LenCoin')
+    it('tracks the symbol', async () => {
+      const result = await token.symbol()
+      result.should.equal(symbol)
+    })
+
+    it('tracks the decimals', async () => {
+      const result = await token.decimals()
+      result.toString().should.equal(decimals)
+    })
+
+    it('tracks the totalSupply', async () => {
+      const result = await token.totalSupply()
+      result.toString().should.equal(totalSupply)
     })
   })
 })
