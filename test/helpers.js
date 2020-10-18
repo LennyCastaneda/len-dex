@@ -6,3 +6,4 @@ export const tokens = (n) => {
   )
 }
   
+export const EVM_REVERT = 'VM Exception while processing transaction: revert'
