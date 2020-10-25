@@ -6,17 +6,6 @@ pragma solidity ^0.5.0;
  * Handle Tades - Charge Fees
  */
 
-contract Exchange {
-    // Variables
-    address public feeAccount; // account the recieves exchange fees
-    uint256 public feePercent; // fee percentage
-
-    constructor(address _feeAccount, uint256 _feePercent) public {
-        feeAccount = _feeAccount;
-        feePercent = _feePercent;
-    }
-}
-
 // TODO:
 // [X] Set the fee account
 // [ ] Deposit Ether
@@ -28,3 +17,14 @@ contract Exchange {
 // [ ] Cancel order
 // [ ] Fill order
 // [ ] Charge fees
+
+contract Exchange {
+    // Variables
+    address public feeAccount; // account the recieves exchange fees
+    uint256 public feePercent; // fee percentage
+
+    constructor(address _feeAccount, uint256 _feePercent) public {
+        feeAccount = _feeAccount;
+        feePercent = _feePercent;
+    }
+}
