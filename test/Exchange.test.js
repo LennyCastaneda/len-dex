@@ -157,7 +157,7 @@ contract('Exchange', ([deployer, feeAccount, user1]) => {
     })
   })
 
-  describe('withdrawing tokens funds', async () => {
+  describe('withdrawing tokens', async () => {
     let result
     let amount
 

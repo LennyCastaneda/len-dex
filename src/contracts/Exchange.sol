@@ -53,12 +53,16 @@ contract Exchange {
     }
 
     function withdrawEther(uint256 _amount) public {
-        // Check for sufficient balance to send tokens; else stop execution
+        // Check for sufficient balance of sender to send tokens; else stop execution
         require(tokens[ETHER][msg.sender] >= _amount);
 
+        // Subtract the amount of tokens to send from sender
         tokens[ETHER][msg.sender] -= _amount;
+
+        // Send Ether back to original user
         msg.sender.transfer(_amount);
 
+        // Publish event
         emit Withdraw(ETHER, msg.sender, _amount, tokens[ETHER][msg.sender]);
     }
 
@@ -88,6 +92,7 @@ contract Exchange {
         // Require token gets transferred back to user from this SmartContract
         require(Token(_token).transfer(msg.sender, _amount));
 
+        // Publish event
         emit Withdraw(_token, msg.sender, _amount, tokens[_token][msg.sender]);
     }
 
