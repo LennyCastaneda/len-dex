@@ -27,10 +27,39 @@ contract Exchange {
     uint256 public feePercent; // fee percentage
     address constant ETHER = address(0); // store Ether in tokens mapping with blank address
     mapping(address => mapping(address => uint256)) public tokens;
+    uint256 public orderCount; // keep tracks of orders as a counter cache
+
+    // Store the order on blockchain using a mapping
+    mapping(uint256 => _Order) public orders; // key is an id of uint256 and the value is an _Order struct with a free orders function allows to read all orders from the mapping
 
     // Events
     event Deposit(address token, address user, uint256 amount, uint256 balance);
     event Withdraw(address token, address user, uint256 amount, uint256 balance);
+    
+    // Used outside of SmartContract
+    event Order(
+        uint256 id,
+        address user,
+        address tokenGet,
+        uint256 amountGet,
+        address tokenGive,
+        uint256 amountGive,
+        uint256 timestamp
+    );
+
+    // Model the order by creating an new type 
+    // For internal use only - used inside SmartContract only hence underscore is used to avoid naming conflicts
+    struct _Order {
+        uint256 id;
+        address user;
+        address tokenGet;
+        uint256 amountGet;
+        address tokenGive;
+        uint256 amountGive;
+        uint256 timestamp;
+    }
+
+    // Add order to storage
 
     constructor(address _feeAccount, uint256 _feePercent) public {
         feeAccount = _feeAccount;
@@ -93,5 +122,11 @@ contract Exchange {
 
     function balanceOf(address _token, address _user) public view returns (uint256) {
         return tokens[_token][_user];
+    }
+
+    function makeOrder(address _tokenGet, uint256 _amountGet, address _tokenGive, uint256 _amountGive) public {
+        orderCount += 1;
+        orders[orderCount] = _Order(orderCount, msg.sender, _tokenGet, _amountGet, _tokenGive, _amountGive, now);
+        emit Order(orderCount, msg.sender, _tokenGet, _amountGet, _tokenGive, _amountGive, now);
     }
 }
