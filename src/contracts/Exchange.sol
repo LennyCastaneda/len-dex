@@ -12,10 +12,10 @@ import "./Token.sol";
 // [X] Set the fee account
 // [X] Create Fallback function for accidental deposits
 // [X] Deposit Ether
-// [ ] Withdraw Ether
+// [X] Withdraw Ether
 // [X] Deposit tokens
-// [ ] Withdrawal tokens
-// [ ] Check balances
+// [X] Withdrawal tokens
+// [X] Check balances
 // [ ] Make order
 // [ ] Cancel order
 // [ ] Fill order
