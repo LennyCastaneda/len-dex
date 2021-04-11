@@ -27,7 +27,7 @@ contract Exchange {
     uint256 public feePercent; // fee percentage
     address constant ETHER = address(0); // store Ether in tokens mapping with blank address
     mapping(address => mapping(address => uint256)) public tokens;
-    uint256 public orderCount; // keep tracks of orders as a counter cache
+    uint256 public orderCount; // keep tracks of orders as a counter cache, starts at zero
 
     // Store the order on blockchain using a mapping
     mapping(uint256 => _Order) public orders; // key is an id of uint256 and the value is an _Order struct with a free orders function allows to read all orders from the mapping
@@ -35,9 +35,7 @@ contract Exchange {
     // Events
     event Deposit(address token, address user, uint256 amount, uint256 balance);
     event Withdraw(address token, address user, uint256 amount, uint256 balance);
-    
-    // Used outside of SmartContract
-    event Order(
+    event Order(    // Used outside of SmartContract
         uint256 id,
         address user,
         address tokenGet,
@@ -48,8 +46,7 @@ contract Exchange {
     );
 
     // Model the order by creating an new type 
-    // For internal use only - used inside SmartContract only hence underscore is used to avoid naming conflicts
-    struct _Order {
+    struct _Order { // For internal use only - used inside SmartContract only hence underscore is used to avoid naming conflicts
         uint256 id;
         address user;
         address tokenGet;
@@ -125,8 +122,13 @@ contract Exchange {
     }
 
     function makeOrder(address _tokenGet, uint256 _amountGet, address _tokenGive, uint256 _amountGive) public {
-        orderCount += 1;
+        // Set order count
+        orderCount += 1; 
+
+        // Add newly created orders to orders count and aded to the mapping
         orders[orderCount] = _Order(orderCount, msg.sender, _tokenGet, _amountGet, _tokenGive, _amountGive, now);
+
+        // Trigger event anytime an order it made
         emit Order(orderCount, msg.sender, _tokenGet, _amountGet, _tokenGive, _amountGive, now);
     }
 }
