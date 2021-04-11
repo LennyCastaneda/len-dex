@@ -16,8 +16,8 @@ import "./Token.sol";
 // [X] Deposit tokens
 // [X] Withdrawal tokens
 // [X] Check balances
-// [ ] Make order
-// [ ] Cancel order
+// [X] Make order
+// [X] Cancel order
 // [ ] Fill order
 // [ ] Charge fees
 
@@ -28,6 +28,7 @@ contract Exchange {
     address constant ETHER = address(0); // store Ether in tokens mapping with blank address
     mapping(address => mapping(address => uint256)) public tokens;
     uint256 public orderCount; // keep tracks of orders as a counter cache, starts at zero
+    mapping(uint256 => bool) public orderCancelled;
 
     // Store the order on blockchain using a mapping
     mapping(uint256 => _Order) public orders; // key is an id of uint256 and the value is an _Order struct with a free orders function allows to read all orders from the mapping
@@ -35,7 +36,17 @@ contract Exchange {
     // Events
     event Deposit(address token, address user, uint256 amount, uint256 balance);
     event Withdraw(address token, address user, uint256 amount, uint256 balance);
-    event Order(    // Used outside of SmartContract
+    event Order(    // This event used outside of SmartContract
+        uint256 id,
+        address user,
+        address tokenGet,
+        uint256 amountGet,
+        address tokenGive,
+        uint256 amountGive,
+        uint256 timestamp
+    );
+
+    event Cancel(    // This event used outside of SmartContract
         uint256 id,
         address user,
         address tokenGet,
@@ -130,5 +141,19 @@ contract Exchange {
 
         // Trigger event anytime an order it made
         emit Order(orderCount, msg.sender, _tokenGet, _amountGet, _tokenGive, _amountGive, now);
+    }
+
+    function cancelOrder(uint256 _id) public {
+        // Fethc order from mapping
+        _Order storage _order = orders[_id]; // passing in Id and fetching order out of mapping from storage assign to _order local variable
+
+        // Make sure order user is the same as the person calling this function
+        require(address(_order.user) == msg.sender);
+
+        // Ensure it is a valid order, make sure not to cancel an order that does not exist
+        require(_order.id == _id);
+
+        orderCancelled[_id] = true; // source of truth that determines whether an order has been canceled or not
+        emit Cancel(_order.id, msg.sender, _order.tokenGet, _order.amountGet, _order.tokenGive, _order.amountGive, now);
     }
 }
