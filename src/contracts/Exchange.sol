@@ -22,18 +22,27 @@ import "./Token.sol";
 // [ ] Charge fees
 
 contract Exchange {
-    // Variables
+    /********************
+    *   VARIABLES       *
+    ********************/
     address public feeAccount; // account the recieves exchange fees
     uint256 public feePercent; // fee percentage
     address constant ETHER = address(0); // store Ether in tokens mapping with blank address
     mapping(address => mapping(address => uint256)) public tokens;
+
+    // to know how many orders are inside of order mapping, there is no way to determine size of mapping by itself which is why we need a counter cache -> ordercount.
     uint256 public orderCount; // keep tracks of orders as a counter cache, starts at zero
+    
     mapping(uint256 => bool) public orderCancelled;
+    mapping(uint256 => bool) public orderFilled;
 
     // Store the order on blockchain using a mapping
     mapping(uint256 => _Order) public orders; // key is an id of uint256 and the value is an _Order struct with a free orders function allows to read all orders from the mapping
 
-    // Events
+
+    /********************
+    *   EVENTS          *
+    ********************/
     event Deposit(address token, address user, uint256 amount, uint256 balance);
     event Withdraw(address token, address user, uint256 amount, uint256 balance);
     event Order(    // This event used outside of SmartContract
@@ -56,6 +65,20 @@ contract Exchange {
         uint256 timestamp
     );
 
+    event Trade(
+        uint256 id,
+        address user,
+        address tokenGet,
+        uint256 amountGet,
+        address tokenGive,
+        uint256 amountGive,
+        address userFill,
+        uint256 timestamp        
+    );
+
+    /********************
+    *   STRUCTS         *
+    ********************/
     // Model the order by creating an new type 
     struct _Order { // For internal use only - used inside SmartContract only hence underscore is used to avoid naming conflicts
         uint256 id;
@@ -67,15 +90,18 @@ contract Exchange {
         uint256 timestamp;
     }
 
-    // Add order to storage
-
+    /********************
+    *   CONSTRUCTOR     *
+    ********************/
     constructor(address _feeAccount, uint256 _feePercent) public {
         feeAccount = _feeAccount;
         feePercent = _feePercent;
     }
 
-    // Fallback: reverts if Ether is sent to this smart contract by mistake
-    function() external {
+    /********************
+    *   FUNCTIONS       *
+    ********************/
+    function() external {   // Fallback function reverts if Ether is sent to this smart contract by mistake
         revert();
     }
 
@@ -155,5 +181,57 @@ contract Exchange {
 
         orderCancelled[_id] = true; // source of truth that determines whether an order has been canceled or not
         emit Cancel(_order.id, msg.sender, _order.tokenGet, _order.amountGet, _order.tokenGive, _order.amountGive, now);
+    }
+
+    function fillOrder(uint256 _id) public {
+        // Make sure we are filling in a valid order
+        require(_id > 0 && _id <= orderCount);  // Ensure order Id is valid by being greater than zero and less than the total order count 
+
+        // ensure the order is not filled or cancelled already
+        require(!orderFilled[_id]);     // require orderFilled is not true
+        require(!orderCancelled[_id]);  // require orderCancelled is not true
+
+        // Fetch order from storage
+        _Order storage _order = orders[_id]; // passing in Id and fetching order out of mapping from storage assign to _order local variable
+
+        // Call trade helper function to execute the trade
+        _trade(_order.id, _order.user, _order.tokenGet, _order.amountGet, _order.tokenGive, _order.amountGive);
+
+        // Mark order as filled
+        orderFilled[_order.id] = true;
+
+
+    }
+
+    /************************
+    *   HELPER FUNCTIONS    *
+    ************************/
+    function _trade(uint256 _orderId, address _user, address _tokenGet, uint256 _amountGet, address _tokenGive, uint256 _amountGive) internal {
+        /****************************************************************
+        *   Execute trade - swap balances from one account to another   *
+        ****************************************************************/
+
+        // Calculate fees
+        uint256 _feeAmount = (_amountGive * feePercent) / 100;  // 10 divided by 100 is a percentage - 10% of total.
+        
+        
+        // Charge fees
+        // Fee deducted from _amountGet
+        tokens[_tokenGet][msg.sender] = (tokens[_tokenGet][msg.sender] - _amountGet) + _feeAmount;  // fetch msg.sender's (user who is filling order) balance and set it to thier balance minus amountGet. msg.sender is person filling the order
+        
+        // whatever is the tokenGet is for the user we are going to add it to the user's balance. user is person who created order.
+        tokens[_tokenGet][_user] = tokens[_tokenGet][_user] + _amountGet;            
+        
+        // Fees paid by the user that fills the order, which is msg.sender
+        tokens[_tokenGet][feeAccount] = tokens[_tokenGet][feeAccount] + _feeAmount;  // Update feeAccount to the _feeAmount, so we can collect the fees. 
+
+        // take user's balance and subtract amountGive
+        tokens[_tokenGive][_user] = tokens[_tokenGive][_user] - _amountGive;    
+
+        // add amountGive to the person filling the order.     
+        tokens[_tokenGive][msg.sender] = tokens[_tokenGive][msg.sender] + _amountGive; 
+
+        // emit trade event
+        emit Trade(_orderId, _user, _tokenGet, _amountGet, _tokenGive, _amountGive, msg.sender, now);
     }
 }
