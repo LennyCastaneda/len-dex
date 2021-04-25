@@ -1,4 +1,3 @@
-import Web3 from 'web3'
 import { tokens, ether, EVM_REVERT, ETHER_ADDRESS } from './helpers'
 
 const Token = artifacts.require("./Token")
@@ -12,6 +11,7 @@ contract('Exchange', ([deployer, feeAccount, user1, user2]) => {
   let token
   let exchange
   const feePercent = 10
+  const gasPrice = ether(0.00206736)
   
   // Setup mock tokens & exchange
   beforeEach(async () => {
@@ -273,6 +273,7 @@ contract('Exchange', ([deployer, feeAccount, user1, user2]) => {
           result = await exchange.fillOrder('1', { from: user2 })
         })
 
+        // user2 should recieve 10% less ether
         it('executes the trade & charges fees', async () => {
           let balance
           balance = await exchange.balanceOf(token.address, user1)
@@ -282,14 +283,14 @@ contract('Exchange', ([deployer, feeAccount, user1, user2]) => {
           balance.toString().should.equal(ether(1).toString(), 'user2 recieved Ether')
 
           balance = await exchange.balanceOf(ETHER_ADDRESS, user1)
-          balance.toString().should.equal('0', 'user2 Ether deducted')
+          balance.toString().should.equal('0', 'user1 Ether deducted')
 
           balance = await exchange.balanceOf(token.address, user2)
           balance.toString().should.equal(tokens(0.9).toString(), 'user2 tokens deducted with fee applied')
 
           const feeAccount = await exchange.feeAccount()
           balance = await exchange.balanceOf(token.address, feeAccount)
-          ballance.toString().should.equal(tokens(0.1).toString(), 'feeAccount recieved fee')
+          balance.toString().should.equal(tokens(0.1).toString(), 'feeAccount recieved fee')
 
         })
 

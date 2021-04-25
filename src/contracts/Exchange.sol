@@ -22,6 +22,8 @@ import "./Token.sol";
 // [ ] Charge fees
 
 contract Exchange {
+    using SafeMath for uint256;
+
     /********************
     *   VARIABLES       *
     ********************/
@@ -185,11 +187,11 @@ contract Exchange {
 
     function fillOrder(uint256 _id) public {
         // Make sure we are filling in a valid order
-        require(_id > 0 && _id <= orderCount);  // Ensure order Id is valid by being greater than zero and less than the total order count 
+        require(_id > 0 && _id <= orderCount, 'Error, wrong id');  // Ensure order Id is valid by being greater than zero and less than the total order count 
 
         // ensure the order is not filled or cancelled already
-        require(!orderFilled[_id]);     // require orderFilled is not true
-        require(!orderCancelled[_id]);  // require orderCancelled is not true
+        require(!orderFilled[_id], 'Error, order already filled');     // require orderFilled is not true
+        require(!orderCancelled[_id], 'Error, order alread cancelled');  // require orderCancelled is not true
 
         // Fetch order from storage
         _Order storage _order = orders[_id]; // passing in Id and fetching order out of mapping from storage assign to _order local variable
@@ -212,24 +214,24 @@ contract Exchange {
         ****************************************************************/
 
         // Calculate fees
-        uint256 _feeAmount = (_amountGive * feePercent) / 100;  // 10 divided by 100 is a percentage - 10% of total.
+        uint256 _feeAmount = _amountGive.mul(feePercent).div(100);  // 10 divided by 100 is a percentage - 10% of total.
         
         
         // Charge fees
         // Fee deducted from _amountGet
-        tokens[_tokenGet][msg.sender] = (tokens[_tokenGet][msg.sender] - _amountGet) + _feeAmount;  // fetch msg.sender's (user who is filling order) balance and set it to thier balance minus amountGet. msg.sender is person filling the order
+        tokens[_tokenGet][msg.sender] = tokens[_tokenGet][msg.sender].sub(_amountGet.add(_feeAmount));  // fetch msg.sender's (user who is filling order) balance and set it to thier balance minus amountGet. msg.sender is person filling the order
         
         // whatever is the tokenGet is for the user we are going to add it to the user's balance. user is person who created order.
-        tokens[_tokenGet][_user] = tokens[_tokenGet][_user] + _amountGet;            
+        tokens[_tokenGet][_user] = tokens[_tokenGet][_user].add(_amountGet);            
         
         // Fees paid by the user that fills the order, which is msg.sender
-        tokens[_tokenGet][feeAccount] = tokens[_tokenGet][feeAccount] + _feeAmount;  // Update feeAccount to the _feeAmount, so we can collect the fees. 
+        tokens[_tokenGet][feeAccount] = tokens[_tokenGet][feeAccount].add(_feeAmount);  // Update feeAccount to the _feeAmount, so we can collect the fees. 
 
         // take user's balance and subtract amountGive
-        tokens[_tokenGive][_user] = tokens[_tokenGive][_user] - _amountGive;    
+        tokens[_tokenGive][_user] = tokens[_tokenGive][_user].sub(_amountGive);    
 
         // add amountGive to the person filling the order.     
-        tokens[_tokenGive][msg.sender] = tokens[_tokenGive][msg.sender] + _amountGive; 
+        tokens[_tokenGive][msg.sender] = tokens[_tokenGive][msg.sender].add(_amountGive); 
 
         // emit trade event
         emit Trade(_orderId, _user, _tokenGet, _amountGet, _tokenGive, _amountGive, msg.sender, now);
