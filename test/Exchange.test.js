@@ -7,7 +7,7 @@ require('chai')
   .use(require('chai-as-promised'))
   .should()
 
-contract('Exchange', ([deployer, feeAccount, user1, user2]) => {
+contract('Exchange', ([deployer, feeAccount, user1, user2, rebalancer]) => {
   let token
   let exchange
   const feePercent = 10
@@ -380,6 +380,74 @@ contract('Exchange', ([deployer, feeAccount, user1, user2]) => {
           // Try to cancel the order from another user
           await exchange.cancelOrder('1', { from: user2 }).should.be.rejectedWith(EVM_REVERT)
         })
+      })
+    })
+  })
+
+  describe('fillOrder()', () => {
+    describe('Check balances after filling user1 Tokens buy order', () => {
+      beforeEach(async () => {
+        // user1 deposit 1 ETHER to the exchange
+        await exchange.depositEther({ from: user1, value: ether(1) })
+        // user1 create order to buy 10 tokens for 1 ETHER
+        await exchange.makeOrder(token.address, tokens(10), ETHER_ADDRESS, ether(1), { from: user1 })
+        // user2 gets tokens
+        await token.transfer(user2, tokens(11), { from: deployer })
+        // user2 approve exchange to spend his tokens
+        await token.approve(exchange.address, tokens(11), { from: user2 })
+        // user2 deposit tokens + fee cost (1 token) to the exchange
+        await exchange.depositToken(token.address, tokens(11), { from: user2 })
+        // user2 fills the order
+        await exchange.fillOrder('1', { from: user2 })
+      })
+    
+      it('user1 tokens balance on exchange should eq. 10', async () => {
+        await (await exchange.balanceOf(token.address, user1)).toString().should.eq(tokens(10).toString())
+      })
+
+      it('user1 ether balance on exchange should eq. 0', async () => {
+        await (await exchange.balanceOf(ETHER_ADDRESS, user1)).toString().should.eq('0')
+      })
+
+      // it('user2 tokens balance on exchange should eq. 0', async () => {
+      //   await (await exchange.balanceOf(token.address, user2)).toString().should.eq('0')
+      // })
+
+      it('user2 ether balance on exchange should eq. 1', async () => {
+        await (await exchange.balanceOf(ETHER_ADDRESS, user2)).toString().should.eq(ether(1).toString())
+      })
+    })
+
+    describe('Check balances after filling user1 Ether buy order', () => {
+      beforeEach(async () => {
+        // user1 Gets the 10 tokens
+        await token.transfer(user1, tokens(10), { from: deployer })
+        // user1 approve exchange to spend his tokens
+        await token.approve(exchange.address, tokens(10), { from: user1 })
+        // user1 approve send tokens to the exchange 
+        await exchange.depositToken(token.address, tokens(10), { from: user1 })
+        // user1 create order to buy 1 Ether for 10 tokens
+        await exchange.makeOrder(ETHER_ADDRESS, ether(1), token.address, tokens(10), { from: user1 })
+        // user2 deposit 1 ETHER + fee cost (.1 ETH) to the exchange
+        await exchange.depositEther({ from: user2, value: ether(1.1) })
+        // user2 fills the order
+        await exchange.fillOrder('1', { from: user2 })
+      })
+
+      // it('user1 tokens balance on exchange should eq. 0', async () => {
+      //   await (await exchange.balanceOf(token.address, user1)).toString().should.eq('0')
+      // })
+
+      it('user1 Ether balance on exchange should eq. 1', async () => {
+        await (await exchange.balanceOf(ETHER_ADDRESS, user1)).toString().should.eq(ether(1).toString())
+      })
+
+      it('user2 tokens balance on exchange should eq. 10', async () => {
+        await (await exchange.balanceOf(token.address, user2)).toString().should.eq(tokens(10).toString())
+      })
+
+      it('user2 ether balance on exchange should eq. 0', async () => {
+        await (await exchange.balanceOf(ETHER_ADDRESS, user2)).toString().should.eq('0')
       })
     })
   })
