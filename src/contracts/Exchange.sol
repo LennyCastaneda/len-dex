@@ -19,8 +19,8 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 // [X] Check balances
 // [X] Make order
 // [X] Cancel order
-// [ ] Fill order
-// [ ] Charge fees
+// [X] Fill order
+// [X] Charge fees
 
 contract Exchange {
     using SafeMath for uint;
@@ -202,8 +202,6 @@ contract Exchange {
 
         // Mark order as filled
         orderFilled[_order.id] = true;
-
-
     }
 
     /************************
@@ -217,9 +215,7 @@ contract Exchange {
         // Calculate fees
         uint256 _feeAmount = _amountGet.mul(feePercent).div(100);  // 10 divided by 100 is a percentage - 10% of total.
         
-        
-        // Charge fees
-        // Fee deducted from _amountGet
+        // Charge fees: Fee deducted from _amountGet
         tokens[_tokenGet][msg.sender] = tokens[_tokenGet][msg.sender].sub(_amountGet.add(_feeAmount));  // fetch msg.sender's (user who is filling order) balance and set it to thier balance minus amountGet. msg.sender is person filling the order
         
         // whatever is the tokenGet is for the user we are going to add it to the user's balance. user is person who created order.
