@@ -409,9 +409,9 @@ contract('Exchange', ([deployer, feeAccount, user1, user2, rebalancer]) => {
         await (await exchange.balanceOf(ETHER_ADDRESS, user1)).toString().should.eq('0')
       })
 
-      // it('user2 tokens balance on exchange should eq. 0', async () => {
-      //   await (await exchange.balanceOf(token.address, user2)).toString().should.eq('0')
-      // })
+      it('user2 tokens balance on exchange should eq. 0', async () => {
+        await (await exchange.balanceOf(token.address, user2)).toString().should.eq('0')
+      })
 
       it('user2 ether balance on exchange should eq. 1', async () => {
         await (await exchange.balanceOf(ETHER_ADDRESS, user2)).toString().should.eq(ether(1).toString())
@@ -434,9 +434,9 @@ contract('Exchange', ([deployer, feeAccount, user1, user2, rebalancer]) => {
         await exchange.fillOrder('1', { from: user2 })
       })
 
-      // it('user1 tokens balance on exchange should eq. 0', async () => {
-      //   await (await exchange.balanceOf(token.address, user1)).toString().should.eq('0')
-      // })
+      it('user1 tokens balance on exchange should eq. 0', async () => {
+        await (await exchange.balanceOf(token.address, user1)).toString().should.eq('0')
+      })
 
       it('user1 Ether balance on exchange should eq. 1', async () => {
         await (await exchange.balanceOf(ETHER_ADDRESS, user1)).toString().should.eq(ether(1).toString())

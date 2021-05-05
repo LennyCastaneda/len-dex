@@ -1,6 +1,7 @@
 pragma solidity ^0.5.0;
 
 import "./Token.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /*
  * Deposit & Withdraw Funds
@@ -22,7 +23,7 @@ import "./Token.sol";
 // [ ] Charge fees
 
 contract Exchange {
-    using SafeMath for uint256;
+    using SafeMath for uint;
 
     /********************
     *   VARIABLES       *
@@ -214,7 +215,7 @@ contract Exchange {
         ****************************************************************/
 
         // Calculate fees
-        uint256 _feeAmount = _amountGive.mul(feePercent).div(100);  // 10 divided by 100 is a percentage - 10% of total.
+        uint256 _feeAmount = _amountGet.mul(feePercent).div(100);  // 10 divided by 100 is a percentage - 10% of total.
         
         
         // Charge fees
