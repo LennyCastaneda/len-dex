@@ -1,4 +1,5 @@
-import { createStore } from 'redux'
+import { createStore, applyMiddleware, compose } from 'redux'
+import { createLogger } from 'redux-logger'
 import rootReducer from "./reducers";
 
 // Create a Redux store holding the state of your app.
