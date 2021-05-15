@@ -9,7 +9,7 @@ const middleware = []
 const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose
 
 // Create a Redux store holding the state of your app.
-export default function configureStore(reloadedState) {
+export default function configureStore(preloadedState) {
   return createStore(
     rootReducer,
     preloadedState,
