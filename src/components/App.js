@@ -2,14 +2,16 @@ import React, { Component } from 'react';
 import './App.css';
 import Web3 from 'web3'
 import Token from '../abis/Token.json'
+import { loadWeb3 } from '../store/interactions'
 
 class App extends Component {
   componentDidMount() {
-    this.loadBlockchainData()
+    this.loadBlockchainData(this.props.dispatch)
   }
 
-  async loadBlockchainData() {
-    const web3 = new Web3(window.ethereum)
+  async loadBlockchainData(dispatch) {
+    // const web3 = new Web3(window.ethereum)
+    const web3 = await loadWeb3(dispatch)
 
     const network = await web3.eth.net.getNetworkType()
     console.log("network", network)
