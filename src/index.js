@@ -10,7 +10,6 @@ import * as serviceWorker from './serviceWorker'
 const store = configureStore()
 
 ReactDOM.render(
-  
   <Provider store={store}>
     <App />
   </Provider>,
