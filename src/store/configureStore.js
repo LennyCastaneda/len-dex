@@ -13,6 +13,7 @@ export default function configureStore(preloadedState) {
   return createStore(
     rootReducer,
     preloadedState,
+    // Allow Redux logger to show us anytime an action is triggered
     composeEnhancers(applyMiddleware(...middleware, loggerMiddleware))
   )
 }

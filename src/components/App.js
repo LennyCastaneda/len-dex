@@ -1,8 +1,7 @@
 import React, { Component } from 'react'
 import './App.css'
 import { connect } from 'react-redux'
-import Token from '../abis/Token.json'
-import { loadWeb3 } from '../store/interactions'
+import { loadWeb3, loadAccount, loadToken } from '../store/interactions'
 
 class App extends Component {
   componentDidMount() {
@@ -13,26 +12,30 @@ class App extends Component {
     const web3 = await loadWeb3(dispatch)
     console.log("web3", web3)
 
-    const network = await web3.eth.net.getNetworkType()
-    console.log("network", network)
+    // const network = await web3.eth.net.getNetworkType()
+    // console.log("network", network)
 
     const networkId = await web3.eth.net.getId()
     console.log("networkId", networkId)
 
-    const accounts = await web3.eth.getAccounts()
+    const accounts = await loadAccount(web3, dispatch)
     console.log("accounts", accounts)
 
-    console.log("abi", Token.abi)
-    console.log("address", Token.networks[networkId].address)
+    // console.log("abi", Token.abi)
+    // console.log("address", Token.networks[networkId].address)
 
-    const networks = Token.networks
-    console.log("networks", networks)
+    // const networks = Token.networks
+    // console.log("networks", networks)
 
-    const token = new web3.eth.Contract(Token.abi, Token.networks[networkId].address)
+    const token = await loadToken(web3, networkId, dispatch)
+    if(!token) {
+      window.alert('Token smart contract not detected on the current network. Please select another network with Metamask.')
+      return
+    }
     console.log("token", token)
 
-    const totalSupply = await token.methods.totalSupply().call()
-    console.log("totalSupply", totalSupply)
+    // const totalSupply = await token.methods.totalSupply().call()
+    // console.log("totalSupply", totalSupply)
   }
 
   render() {
@@ -132,4 +135,5 @@ function mapStateToProps(state) {
   }
 }
 
+// Connect app component to Redux to get info inside of Props
 export default connect(mapStateToProps)(App);
